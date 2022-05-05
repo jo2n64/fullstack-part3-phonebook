@@ -32,6 +32,8 @@ app.use(morgan('tiny'))
 
 app.use(cors())
 
+app.use(express.static('build'))
+
 app.get('/api/persons', (request, response) => {
 	response.json(contacts)
 })
