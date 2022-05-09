@@ -8,6 +8,8 @@ const cors = require('cors')
 const app = express()
 const Contact = require('./models/contact')
 
+
+
 app.use(express.json())
 
 app.use(morgan('tiny'))
@@ -15,6 +17,7 @@ app.use(morgan('tiny'))
 app.use(cors())
 
 app.use(express.static('build'))
+
 
 app.get('/info', (request, response) => {
 
@@ -32,33 +35,33 @@ app.get('/info', (request, response) => {
 app.get('/api/persons/:id', (request, response) => {
 	Contact.findById(request.params.id)
 		.then(contact => {
-			response.json(contact)
+			if (contact) {
+				response.json(contact)
+			}
+			else {
+				response.status(404).end()
+			}
 		})
-		.catch(error => {
-			response.status(404).end()
-		})
-
-	// const id = Number(request.params.id)
-	// console.log('Id received: ', id)
-	// const person = contacts.find(p => p.id === id)
-
-	// if (person) {
-	// 	response.json(person)
-	// }
-	// else {
-	// 	response.status(404).end()
-	// }
+		.catch(error => next(error))
 })
 
+// const id = Number(request.params.id)
+// console.log('Id received: ', id)
+// const person = contacts.find(p => p.id === id)
+
+// if (person) {
+// 	response.json(person)
+// }
+// else {
+// 	response.status(404).end()
+// }
+
 app.delete('/api/persons/:id', (request, response) => {
-	const id = Number(request.params.id)
-	if (id <= contacts.length) {
-		contacts = contacts.filter(person => person.id != id)
-		response.status(204).end()
-	}
-	else {
-		response.status(404).end()
-	}
+	Contact.findByIdAndRemove(request.params.id)
+		.then(result => {
+			response.status(204).end()
+		})
+		.catch(error => next(error))
 
 })
 
@@ -96,6 +99,24 @@ app.post('/api/persons', (request, response) => {
 	})
 
 })
+
+const unknownEndpoint = (request, response) => {
+	response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+	console.error(error.message)
+
+	if (error.name === 'CastError') {
+		return response.status(400).send({ error: 'malformatted id' })
+	}
+
+	next(error)
+}
+
+app.use(errorHandler)
 
 app.get('/api/persons', (request, response) => {
 	Contact.find({}).then(contacts => {
