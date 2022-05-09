@@ -40,7 +40,7 @@ app.get('/info', (request, response) => {
 
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
 	//todo check error in posting somewhere here...part 3c
 	const body = request.body
 	if (!body.content === undefined) {
@@ -49,12 +49,13 @@ app.post('/api/persons', (request, response) => {
 		})
 	}
 	const person = new Contact({
-		name: body.name || 'No name in post request gj',
-		number: body.number || 'No number in post request gj',
+		name: body.name,
+		number: body.number,
 	})
 	person.save().then(savedPerson => {
 		response.json(savedPerson)
 	})
+		.catch(error => next(error))
 
 })
 
@@ -88,14 +89,16 @@ app.get('/api/persons/:id', (request, response, next) => {
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-	const body = request.body
+	const { name, number } = request.body
 
 	const contact = {
 		name: body.name,
 		number: body.number,
 	}
 
-	Contact.findByIdAndUpdate(request.params.id, contact, { new: true })
+	Contact.findByIdAndUpdate(request.params.id,
+		{ name, number },
+		{ new: true, runValidators: true, context: 'query' })
 		.then(updatedContact => {
 			console.log('updated contact????: ', updatedContact)
 			console.log('how tf is the list looking?: ', Contact.find({}))
@@ -114,6 +117,9 @@ const errorHandler = (error, request, response, next) => {
 	console.error(error.message)
 	if (error.name === 'CastError') {
 		return response.status(400).send({ error: 'malformatted id' })
+	}
+	else if (error.name === 'ValidationError') {
+		return response.status(400).json({ error: error.message })
 	}
 	next(error)
 }
