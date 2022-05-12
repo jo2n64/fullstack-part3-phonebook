@@ -52,10 +52,21 @@ app.post('/api/persons', (request, response, next) => {
 		name: body.name,
 		number: body.number,
 	})
-	person.save().then(savedPerson => {
-		response.json(savedPerson)
-	})
+	Contact.findOne({ name: person.name })
+		.then(result => {
+			if (result) {
+				response.status(409).send({ error: 'contact already exists!' }).end()
+			}
+			else {
+				person.save()
+					.then(savedPerson => {
+						response.json(savedPerson)
+					})
+					.catch(error => next(error))
+			}
+		})
 		.catch(error => next(error))
+
 
 })
 
@@ -91,17 +102,10 @@ app.get('/api/persons/:id', (request, response, next) => {
 app.put('/api/persons/:id', (request, response, next) => {
 	const { name, number } = request.body
 
-	// const contact = {
-	// 	name: body.name,
-	// 	number: body.number,
-	// }
-
 	Contact.findByIdAndUpdate(request.params.id,
 		{ name, number },
 		{ new: true, runValidators: true, context: 'query' })
 		.then(updatedContact => {
-			console.log('updated contact????: ', updatedContact)
-			console.log('how tf is the list looking?: ', Contact.find({}))
 			response.json(updatedContact)
 		})
 		.catch(error => next(error))
