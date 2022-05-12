@@ -1,6 +1,4 @@
-//todo PUSH TO HEROKU!
-
-
+/* eslint-disable no-unused-vars */
 const express = require('express')
 const app = express()
 const cors = require('cors')
@@ -8,7 +6,7 @@ const morgan = require('morgan')
 require('dotenv').config()
 const Contact = require('./models/contact')
 
-const requestLogger = (request, response, next) => {
+const requestLogger = (request, _response, next) => {
 	console.log('Method: ', request.method)
 	console.log('Path: ', request.path)
 	console.log('Body: ', request.body)
@@ -26,12 +24,12 @@ app.use(morgan('tiny'))
 
 app.use(express.static('build'))
 
-app.get('/info', (request, response) => {
+app.get('/info', (_request, response) => {
 	Contact.find({}).then(contacts => {
 		response.setHeader('Content-Type', 'text/html')
-		let contactsInfo = "<p>Phonebook has info for " + contacts.length + " people</p><br/>"
+		let contactsInfo = '<p>Phonebook has info for ' + contacts.length + ' people</p><br/>'
 		let currentDate = new Date()
-		let currentDateStr = "<p>" + currentDate + "</p>"
+		let currentDateStr = '<p>' + currentDate + '</p>'
 		//idk why it has the weird characters in the end...
 		response.write(contactsInfo)
 		response.write(currentDateStr)
@@ -70,7 +68,7 @@ app.post('/api/persons', (request, response, next) => {
 
 })
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (_request, response) => {
 	Contact.find({}).then(contacts => {
 		response.json(contacts)
 	})
@@ -79,7 +77,7 @@ app.get('/api/persons', (request, response) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
 	Contact.findByIdAndRemove(request.params.id)
-		.then(result => {
+		.then(() => {
 			response.status(204).end()
 		})
 		.catch(error => next(error))
@@ -111,13 +109,13 @@ app.put('/api/persons/:id', (request, response, next) => {
 		.catch(error => next(error))
 })
 
-const unknownEndpoint = (request, response) => {
+const unknownEndpoint = (_request, response) => {
 	response.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, _request, response, next) => {
 	console.error(error.message)
 	if (error.name === 'CastError') {
 		return response.status(400).send({ error: 'malformatted id' })

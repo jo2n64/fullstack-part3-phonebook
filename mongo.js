@@ -26,8 +26,8 @@ const contact = new Contact({
 	number: contactNumber,
 })
 
-if (contactName != null && contactNumber != null) {
-	contact.save().then(result => {
+if (contactName !== null && contactNumber !== null) {
+	contact.save().then(() => {
 		console.log(`added ${contactName} number ${contactNumber} to phonebook`)
 		mongoose.connection.close()
 	})
